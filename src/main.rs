@@ -1,5 +1,6 @@
 use clap::Parser;
-use std::fmt::{Formatter, Display};
+use anyhow::{Context, Result};
+// use std::fmt::{Formatter, Display};
 
 /// Search for a pattern in a file and display the lines that contain it.
 #[derive(Parser, Debug)]
@@ -11,14 +12,22 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-impl Display for Cli {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "pattern: {}, path: {}", self.pattern, self.path.display())
-    }
-}
+// impl Display for Cli {
+//     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+//         write!(f, "pattern: {}, path: {}", self.pattern, self.path.display())
+//     }
+// }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Cli::parse();
+    let content = std::fs::read_to_string(&args.path)
+                    .with_context(|| format!("could not read file `{}`", &args.path.display()))?;
 
-    println!("args = {}", args);
+    for line in content.lines() {
+        if line.contains(&args.pattern) {
+            println!("{}", line);
+        }
+    }
+    Ok(())
+    // println!("args = {}", args);
 }
