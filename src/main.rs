@@ -1,5 +1,6 @@
 use clap::Parser;
 use anyhow::{Context, Result};
+use std::io::{self, Write};
 // use std::fmt::{Formatter, Display};
 
 /// Search for a pattern in a file and display the lines that contain it.
@@ -23,11 +24,15 @@ fn main() -> Result<()> {
     let content = std::fs::read_to_string(&args.path)
                     .with_context(|| format!("could not read file `{}`", &args.path.display()))?;
 
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+
     for line in content.lines() {
         if line.contains(&args.pattern) {
-            println!("{}", line);
+            writeln!(handle, "{}", line)?;
+            handle.flush()?;
         }
     }
-    Ok(())
     // println!("args = {}", args);
+    Ok(())
 }
