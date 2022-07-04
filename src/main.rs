@@ -1,10 +1,9 @@
+#![allow(unused)]
 use clap::Parser;
 use anyhow::{Context, Result};
-use std::io::{self, Write};
-// use std::fmt::{Formatter, Display};
 
 /// Search for a pattern in a file and display the lines that contain it.
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 struct Cli {
     /// The pattern to look for
     pattern: String,
@@ -13,26 +12,18 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-// impl Display for Cli {
-//     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-//         write!(f, "pattern: {}, path: {}", self.pattern, self.path.display())
-//     }
-// }
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let content = std::fs::read_to_string(&args.path)
-                    .with_context(|| format!("could not read file `{}`", &args.path.display()))?;
+        .with_context(|| format!("could not read file `{}`", args.path.display()))?;
+    grrs::find_matches(&content, &args.pattern, &mut std::io::stdout());
 
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-
-    for line in content.lines() {
-        if line.contains(&args.pattern) {
-            writeln!(handle, "{}", line)?;
-            handle.flush()?;
-        }
-    }
-    // println!("args = {}", args);
     Ok(())
+}
+
+#[test]
+fn find_a_match() {
+    let mut result = Vec::new();
+    grrs::find_matches("lorem ipsum\ndolor si amet", "lorem", &mut result);
+    assert_eq!(result, b"lorem ipsum\n");
 }
